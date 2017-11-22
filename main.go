@@ -18,7 +18,7 @@ type MetricPrinter interface {
 // MetricGather is used to save tags and values for output later
 type MetricGather interface {
 	AddTags(map[string]interface{})
-	AddValues(map[string]interface{})
+	AddValues(map[string]string)
 }
 
 // Metric is used contains all the functions that metric can handle
@@ -30,7 +30,7 @@ type Metric interface {
 // MetricContainer us used to hold the data
 type MetricContainer struct {
 	Name   string
-	Tags   map[string]interface{}
+	Tags   map[string]string
 	Values map[string]interface{}
 	sync.RWMutex
 }
@@ -40,14 +40,14 @@ type MetricContainer struct {
 func New(name string) *MetricContainer {
 	return &MetricContainer{
 		Name:   name,
-		Tags:   make(map[string]interface{}),
+		Tags:   make(map[string]string),
 		Values: make(map[string]interface{}),
 	}
 }
 
 // AddTags will consume a map[string]interface{} and add it to the list of metrics
 // that will be output later.
-func (metric *MetricContainer) AddTags(data map[string]interface{}) {
+func (metric *MetricContainer) AddTags(data map[string]string) {
 	metric.Lock()
 	defer metric.Unlock()
 	for key, value := range data {

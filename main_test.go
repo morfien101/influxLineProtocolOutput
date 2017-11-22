@@ -17,15 +17,15 @@ func TestNew(t *testing.T) {
 func TestAddTags(t *testing.T) {
 	slug := &MetricContainer{
 		Name: "test_container",
-		Tags: map[string]interface{}{
-			"testTag1": 1,
+		Tags: map[string]string{
+			"testTag1": "1",
 			"TestTag2": "two",
 		},
 	}
 	c := New("test_container")
-	tag1 := make(map[string]interface{})
-	tag1["testTag1"] = 1
-	tag2 := map[string]interface{}{"TestTag2": "two"}
+	tag1 := make(map[string]string)
+	tag1["testTag1"] = "1"
+	tag2 := map[string]string{"TestTag2": "two"}
 
 	c.AddTags(tag2)
 	c.AddTags(tag1)
@@ -74,16 +74,16 @@ func TestOutput(t *testing.T) {
 			"TestValue3": 1.2,
 			"TestValue4": true,
 		},
-		Tags: map[string]interface{}{
-			"testTag1": 1,
+		Tags: map[string]string{
+			"testTag1": "1",
 			"TestTag2": "two",
 		},
 	}
 
 	// Create the test container
 	c := New("testing_container")
-	c.AddTags(map[string]interface{}{
-		"testTag1":   1,
+	c.AddTags(map[string]string{
+		"testTag1":   "1",
 		"TestValue2": "two",
 	})
 	c.AddValues(map[string]interface{}{
