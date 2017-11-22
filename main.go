@@ -17,8 +17,8 @@ type MetricPrinter interface {
 
 // MetricGather is used to save tags and values for output later
 type MetricGather interface {
-	AddTags(map[string]interface{})
-	AddValues(map[string]string)
+	AddTags(map[string]string)
+	AddValues(map[string]interface{})
 }
 
 // Metric is used contains all the functions that metric can handle
