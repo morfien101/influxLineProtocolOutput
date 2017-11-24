@@ -9,7 +9,7 @@ import (
 )
 
 // VERSION holds the version stamp
-var VERSION = "0.1.0"
+var VERSION = "0.2.0"
 
 // MetricPrinter is used to output the metrics that have been gathered in a LineProtocol
 type MetricPrinter interface {
@@ -183,7 +183,7 @@ func (metric *MetricContainer) ContainsValues(testValues map[string]interface{})
 					invalid = append(
 						invalid,
 						fmt.Sprintf(
-							"The values for %s do not match. Want: '%s'. Got: '%s'.",
+							"The values for %s do not match. Want: '%v'. Got: '%v'.",
 							k,
 							v,
 							values[k],
@@ -225,7 +225,7 @@ func (metric *MetricContainer) Contains(testTags map[string]string, testValues m
 	}
 
 	if len(errorList) > 0 {
-		strings.Join(errorList, "\n")
+		return errors.New(strings.Join(errorList, "\n"))
 	}
 
 	return nil
