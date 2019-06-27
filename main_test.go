@@ -1,7 +1,10 @@
 package influxLineProtocolOutput
 
-import "testing"
-import "reflect"
+import (
+	"reflect"
+	"testing"
+	"time"
+)
 
 func TestNew(t *testing.T) {
 	slug := &MetricContainer{
@@ -128,8 +131,9 @@ func TestTestingMethodsValid(t *testing.T) {
 		"testTag1": "1",
 		"TestTag2": "two",
 	}
+	slugTimestamp := time.Now().UnixNano()
 
-	// Setup contianer to assert against.
+	// Setup container to assert against.
 	c := New("testing_container")
 	c.AddTags(map[string]string{
 		"testTag1": "1",
@@ -142,9 +146,15 @@ func TestTestingMethodsValid(t *testing.T) {
 		"TestValue4": true,
 	})
 
+	c.SetTimeStamp(slugTimestamp)
+
 	// Fire tests
 	if err := c.HasName(slugValidName); err != nil {
 		t.Errorf("HasName with a valid valid failed. Error: %s", err)
+	}
+
+	if err := c.HasTimestamp(slugTimestamp); err != nil {
+		t.Errorf("HasTimestamp with a valid valid failed. Error: %s", err)
 	}
 
 	if err := c.ContainsTags(slugValidTags); err != nil {
@@ -174,7 +184,7 @@ func TestTestingMethodsInvalid(t *testing.T) {
 		"TestTag20": "two",
 	}
 
-	// Setup contianer to assert against.
+	// Setup container to assert against.
 	c := New("bean_counter")
 	c.AddTags(map[string]string{
 		"testTag1": "1",

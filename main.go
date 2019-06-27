@@ -6,10 +6,11 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 // VERSION holds the version stamp
-var VERSION = "0.2.0"
+var VERSION = "0.3.0"
 
 // MetricPrinter is used to output the metrics that have been gathered in a LineProtocol
 type MetricPrinter interface {
@@ -22,6 +23,7 @@ type MetricGather interface {
 	Add(map[string]string, map[string]interface{})
 	AddTags(map[string]string)
 	AddValues(map[string]interface{})
+	SetTimeStamp(int64)
 }
 
 // Metric is used contains all the functions that metric can handle
@@ -40,9 +42,10 @@ type MetricTester interface {
 
 // MetricContainer us used to hold the data
 type MetricContainer struct {
-	Name   string
-	Tags   map[string]string
-	Values map[string]interface{}
+	Name      string
+	Tags      map[string]string
+	Values    map[string]interface{}
+	TimeStamp int64
 	sync.RWMutex
 }
 
@@ -50,9 +53,10 @@ type MetricContainer struct {
 // used as the name for the metric.
 func New(name string) *MetricContainer {
 	return &MetricContainer{
-		Name:   name,
-		Tags:   make(map[string]string),
-		Values: make(map[string]interface{}),
+		Name:      name,
+		Tags:      make(map[string]string),
+		Values:    make(map[string]interface{}),
+		TimeStamp: time.Now().UnixNano(),
 	}
 }
 
@@ -83,13 +87,20 @@ func (metric *MetricContainer) Add(tags map[string]string, data map[string]inter
 	metric.AddValues(data)
 }
 
+// SetTimeStamp will set the timestamp of the metric to the supplied value
+func (metric *MetricContainer) SetTimeStamp(ts int64) {
+	metric.Lock()
+	defer metric.Unlock()
+	metric.TimeStamp = ts
+}
+
 // Output will return the Line Protocol version of the metric
 func (metric *MetricContainer) Output() string {
 	// Lock for reading
 	metric.RLock()
 	defer metric.RLocker()
 
-	// Name,Tags Values
+	// Name,Tags Values timestamp
 	outformat := "%s,%s %s"
 
 	// Create tags line
@@ -114,6 +125,12 @@ func (metric *MetricContainer) Output() string {
 	)
 }
 
+// OutputWithTimestamp outputs the metric with a timestamp
+func (metric *MetricContainer) OutputWithTimestamp() string {
+	m := metric.Output()
+	return fmt.Sprintf("%s %d", m, metric.TimeStamp)
+}
+
 func (metric *MetricContainer) name() string {
 	metric.RLock()
 	defer metric.RUnlock()
@@ -132,9 +149,20 @@ func (metric *MetricContainer) values() map[string]interface{} {
 	return metric.Values
 }
 
+func (metric *MetricContainer) timestamp() int64 {
+	metric.RLock()
+	defer metric.RUnlock()
+	return metric.TimeStamp
+}
+
 // PrintOutput will convert the metric to a Line Protocol and then send it to STDOUT
 func (metric *MetricContainer) PrintOutput() {
 	fmt.Println(metric.Output())
+}
+
+// PrintOutputWithTimestamp will convert the metric to a Line Protocol with the timestamp and then send it to STDOUT
+func (metric *MetricContainer) PrintOutputWithTimestamp() {
+	fmt.Println(metric.OutputWithTimestamp())
 }
 
 // ContainsTags will assert that all the tags passed in are in the metric container.
@@ -237,4 +265,12 @@ func (metric *MetricContainer) HasName(name string) error {
 		return nil
 	}
 	return fmt.Errorf("The metric name does not match. Want: %s, got: %s", name, metric.name())
+}
+
+// HasTimestamp will check that the timestamp matches. If not it will return an error.
+func (metric *MetricContainer) HasTimestamp(ts int64) error {
+	if metric.timestamp() == ts {
+		return nil
+	}
+	return fmt.Errorf("The metric timestamp does not match. Want: %d, got: %d", ts, metric.timestamp())
 }
